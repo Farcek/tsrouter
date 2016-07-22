@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "dist/tsrouter.js",
+  "typings": "dist/tsrouter.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
