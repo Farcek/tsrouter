@@ -80,7 +80,7 @@ var TSHandler = (function () {
     };
     TSHandler.prototype.handler = function () {
         var _this = this;
-        return function (req, res) {
+        return function (req, res, next) {
             var param = _this.req(req);
             Promise.resolve(param)
                 .then(function (param) {
@@ -94,6 +94,9 @@ var TSHandler = (function () {
                 })
                     .then(function (result) {
                     res.json(result);
+                })
+                    .catch(function (err) {
+                    next(err);
                 });
             });
         };

@@ -3,6 +3,7 @@ import * as Promise from "bluebird";
 
 
 export namespace TSRouter {
+
     export interface IRoute<IPram,IResult> {
         parse?:IParser<IPram>;
         valid?:IValidator<IPram>;
@@ -40,6 +41,7 @@ export class Router<IPram, IResult> {
     }
 
     public handler():express.RequestHandler {
+
         return (req:express.Request, res:express.Response) => {
 
             var rParams = null;
@@ -72,6 +74,8 @@ export class Router<IPram, IResult> {
                     res.json(result);
                 })
         }
+
+
     }
 }
 
@@ -92,7 +96,7 @@ export class RouteBasicParam<IResult> {
                 .then(result => {
                     res.json(result);
                 })
-        }
+        };
     }
 }
 
@@ -110,7 +114,7 @@ export abstract class TSHandler<IParam, IResult> {
     abstract res(param:IParam, res:express.Response):IResult | Promise<IResult>;
 
     public handler():express.RequestHandler {
-        return (req:express.Request, res:express.Response) => {
+        return (req:express.Request, res:express.Response, next) => {
             let param = this.req(req);
 
             Promise.resolve(param)
@@ -126,6 +130,9 @@ export abstract class TSHandler<IParam, IResult> {
                         })
                         .then((result)=> {
                             res.json(result);
+                        })
+                        .catch(err => {
+                            next(err);
                         })
                 })
         }
