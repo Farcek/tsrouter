@@ -4,14 +4,13 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var Promise = require("bluebird");
 var Router = (function () {
     function Router(router) {
         this.router = router;
     }
     Router.prototype.handler = function () {
         var _this = this;
-        return function (req, res) {
+        return function (req, res, next) {
             var rParams = null;
             if (_this.router.parse) {
                 rParams = _this.router.parse(req);
@@ -38,6 +37,9 @@ var Router = (function () {
             })
                 .then(function (result) {
                 res.json(result);
+            })
+                .catch(function (err) {
+                next(err);
             });
         };
     };
@@ -58,11 +60,14 @@ var RouteBasicParam = (function () {
     }
     RouteBasicParam.prototype.handler = function () {
         var _this = this;
-        return function (req, res) {
+        return function (req, res, next) {
             var rResult = _this.router.process(req);
             Promise.resolve(rResult)
                 .then(function (result) {
                 res.json(result);
+            })
+                .catch(function (err) {
+                next(err);
             });
         };
     };
@@ -104,3 +109,38 @@ var TSHandler = (function () {
     return TSHandler;
 }());
 exports.TSHandler = TSHandler;
+function buildRouter(src) {
+    return function (req, res, next) {
+        var rParams = null;
+        if (typeof src.parse === 'function') {
+            rParams = src.parse(req);
+        }
+        Promise.resolve(rParams)
+            .then(function (params) {
+            var rValid = true;
+            if (typeof src.valid === 'function') {
+                rValid = src.valid(params, req);
+            }
+            return Promise.resolve(rValid)
+                .then(function (valid) {
+                return {
+                    valid: valid,
+                    params: params
+                };
+            });
+        })
+            .then(function (r) {
+            if (r.valid) {
+                return src.process(r.params);
+            }
+            throw new Error("validation error");
+        })
+            .then(function (result) {
+            res.json(result);
+        })
+            .catch(function (err) {
+            next(err);
+        });
+    };
+}
+exports.buildRouter = buildRouter;

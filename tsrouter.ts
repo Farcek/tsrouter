@@ -1,7 +1,8 @@
 import * as express from "express";
-import * as Promise from "bluebird";
 
-
+/**
+ * @deprecated
+ */
 export namespace TSRouter {
 
     export interface IRoute<IPram,IResult> {
@@ -35,6 +36,9 @@ export namespace TSRouter {
 }
 
 
+/**
+ * @deprecated plase use `IRouter` and `buildRouter`
+ */
 export class Router<IPram, IResult> {
     constructor(private router:TSRouter.IRoute<IPram,IResult>) {
 
@@ -42,7 +46,7 @@ export class Router<IPram, IResult> {
 
     public handler():express.RequestHandler {
 
-        return (req:express.Request, res:express.Response) => {
+        return (req:express.Request, res:express.Response, next:express.NextFunction) => {
 
             var rParams = null;
 
@@ -73,45 +77,59 @@ export class Router<IPram, IResult> {
                 .then(result => {
                     res.json(result);
                 })
+                .catch(err => {
+                    next(err);
+                })
         }
 
 
     }
 }
 
+/**
+ * @deprecated
+ */
 export class ProcessBasicResult<IParam> extends Router<IParam,{}> {
 
 }
 
+/**
+ * @deprecated
+ */
 export class RouteBasicParam<IResult> {
     constructor(private router:TSRouter.IRouteBasicParam<IResult>) {
 
     }
 
     public handler():express.RequestHandler {
-        return (req:express.Request, res:express.Response) => {
+        return (req:express.Request, res:express.Response, next:express.NextFunction) => {
             var rResult = this.router.process(req);
 
             Promise.resolve(rResult)
                 .then(result => {
                     res.json(result);
                 })
+                .catch(err => {
+                    next(err);
+                })
         };
     }
 }
 
-
+/**
+ * @deprecated
+ */
 export abstract class TSHandler<IParam, IResult> {
 
-    req(req:express.Request):IParam | Promise<IParam> {
+    public req(req:express.Request):IParam | Promise<IParam> {
         return null;
     }
 
-    valid(param:IParam, req:express.Request):boolean | Promise<boolean> {
+    public valid(param:IParam, req:express.Request):boolean | Promise<boolean> {
         return true;
     }
 
-    abstract res(param:IParam, res:express.Response):IResult | Promise<IResult>;
+    abstract res(param:IParam, res:express.Response):IResult | Promise<IResult> ;
 
     public handler():express.RequestHandler {
         return (req:express.Request, res:express.Response, next) => {
@@ -136,5 +154,53 @@ export abstract class TSHandler<IParam, IResult> {
                         })
                 })
         }
+    }
+}
+
+
+export interface IRouter<IParam,IResult> {
+    parse?(req?:express.Request):IParam | Promise<IParam>;
+    valid?(param:IParam, req:express.Request):boolean | Promise<boolean>;
+    process(param?:IParam):IResult | Promise<IResult>;
+}
+
+
+export function buildRouter<IParam,IResult>(src:IRouter<IParam,IResult>):express.RequestHandler {
+
+    return (req:express.Request, res:express.Response, next:express.NextFunction) => {
+
+        var rParams = null;
+
+
+        if (typeof src.parse === 'function') {
+            rParams = src.parse(req);
+        }
+
+        Promise.resolve(rParams)
+            .then(params => {
+                let rValid:boolean | Promise<boolean> = true;
+                if (typeof src.valid === 'function') {
+                    rValid = src.valid(params, req);
+                }
+                return Promise.resolve(rValid)
+                    .then(valid => {
+                        return {
+                            valid: valid,
+                            params: params
+                        }
+                    })
+            })
+            .then(r => {
+                if (r.valid) {
+                    return src.process(r.params);
+                }
+                throw new Error("validation error");
+            })
+            .then(result => {
+                res.json(result);
+            })
+            .catch(err => {
+                next(err);
+            })
     }
 }

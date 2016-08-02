@@ -1,5 +1,4 @@
 import * as express from "express";
-import * as Promise from "bluebird";
 export declare namespace TSRouter {
     interface IRoute<IPram, IResult> {
         parse?: IParser<IPram>;
@@ -48,3 +47,9 @@ export declare abstract class TSHandler<IParam, IResult> {
     abstract res(param: IParam, res: express.Response): IResult | Promise<IResult>;
     handler(): express.RequestHandler;
 }
+export interface IRouter<IParam, IResult> {
+    parse?(req?: express.Request): IParam | Promise<IParam>;
+    valid?(param: IParam, req: express.Request): boolean | Promise<boolean>;
+    process(param?: IParam): IResult | Promise<IResult>;
+}
+export declare function buildRouter<IParam, IResult>(src: IRouter<IParam, IResult>): express.RequestHandler;
