@@ -129,7 +129,9 @@ function buildRouter(src) {
                 throw new Error("validation error");
             })
                 .then(function (result) {
-                src.response(res, result, params);
+                if (src.response && typeof src.response === 'function') {
+                    src.response(res, result, params);
+                }
                 res.json(result);
             });
         })

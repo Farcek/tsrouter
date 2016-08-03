@@ -191,7 +191,9 @@ export function buildRouter<IParam,IResult>(src:IRouter<IParam,IResult>):express
                         throw new Error("validation error");
                     })
                     .then(result => {
-                        src.response(res, result, params);
+                        if (src.response && typeof  src.response === 'function') {
+                            src.response(res, result, params);
+                        }
                         res.json(result);
                     })
             })
