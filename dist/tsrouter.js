@@ -123,20 +123,15 @@ function buildRouter(src) {
             }
             return Promise.resolve(rValid)
                 .then(function (valid) {
-                return {
-                    valid: valid,
-                    params: params
-                };
+                if (valid) {
+                    return src.process(params);
+                }
+                throw new Error("validation error");
+            })
+                .then(function (result) {
+                src.response(res, result, params);
+                res.json(result);
             });
-        })
-            .then(function (r) {
-            if (r.valid) {
-                return src.process(r.params);
-            }
-            throw new Error("validation error");
-        })
-            .then(function (result) {
-            res.json(result);
         })
             .catch(function (err) {
             next(err);

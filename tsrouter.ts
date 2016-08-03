@@ -161,6 +161,7 @@ export abstract class TSHandler<IParam, IResult> {
 export interface IRouter<IParam,IResult> {
     parse?(req?:express.Request):IParam | Promise<IParam>;
     valid?(param:IParam, req:express.Request):boolean | Promise<boolean>;
+    response?(res:express.Response, result:IResult, param:IParam):void;
     process(param?:IParam):IResult | Promise<IResult>;
 }
 
@@ -184,20 +185,15 @@ export function buildRouter<IParam,IResult>(src:IRouter<IParam,IResult>):express
                 }
                 return Promise.resolve(rValid)
                     .then(valid => {
-                        return {
-                            valid: valid,
-                            params: params
+                        if (valid) {
+                            return src.process(params);
                         }
+                        throw new Error("validation error");
                     })
-            })
-            .then(r => {
-                if (r.valid) {
-                    return src.process(r.params);
-                }
-                throw new Error("validation error");
-            })
-            .then(result => {
-                res.json(result);
+                    .then(result => {
+                        src.response(res, result, params);
+                        res.json(result);
+                    })
             })
             .catch(err => {
                 next(err);

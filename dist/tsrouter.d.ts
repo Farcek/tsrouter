@@ -50,6 +50,7 @@ export declare abstract class TSHandler<IParam, IResult> {
 export interface IRouter<IParam, IResult> {
     parse?(req?: express.Request): IParam | Promise<IParam>;
     valid?(param: IParam, req: express.Request): boolean | Promise<boolean>;
+    response?(res: express.Response, result: IResult, param: IParam): void;
     process(param?: IParam): IResult | Promise<IResult>;
 }
 export declare function buildRouter<IParam, IResult>(src: IRouter<IParam, IResult>): express.RequestHandler;
