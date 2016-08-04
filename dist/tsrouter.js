@@ -132,7 +132,9 @@ function buildRouter(src) {
                 if (src.response && typeof src.response === 'function') {
                     src.response(res, result, params);
                 }
-                res.json(result);
+                else {
+                    res.json(result);
+                }
             });
         })
             .catch(function (err) {

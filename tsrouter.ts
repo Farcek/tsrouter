@@ -193,8 +193,10 @@ export function buildRouter<IParam,IResult>(src:IRouter<IParam,IResult>):express
                     .then(result => {
                         if (src.response && typeof  src.response === 'function') {
                             src.response(res, result, params);
+                        } else {
+                            res.json(result);
                         }
-                        res.json(result);
+
                     })
             })
             .catch(err => {
