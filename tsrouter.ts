@@ -204,3 +204,25 @@ export function buildRouter<IParam,IResult>(src:IRouter<IParam,IResult>):express
             })
     }
 }
+
+
+export abstract class ExpressRouter<IRequest extends express.Request, IResult> {
+    abstract process(req:IRequest):IResult | Promise<IResult>;
+
+    handler():express.RequestHandler {
+        return (req:IRequest, res:express.Response, next:express.NextFunction) => {
+
+            Promise.resolve(this.process(req))
+                .then(result => {
+                    this.response(result, req, res, next);
+                })
+                .catch(err => {
+                    next(err);
+                })
+        }
+    }
+
+    response(result:IResult, req:IRequest, res:express.Response, next:express.NextFunction) {
+        res.json(result);
+    }
+}

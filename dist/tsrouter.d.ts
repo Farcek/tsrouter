@@ -54,3 +54,8 @@ export interface IRouter<IParam, IResult> {
     process(param?: IParam): IResult | Promise<IResult>;
 }
 export declare function buildRouter<IParam, IResult>(src: IRouter<IParam, IResult>): express.RequestHandler;
+export declare abstract class ExpressRouter<IRequest extends express.Request, IResult> {
+    abstract process(req: IRequest): IResult | Promise<IResult>;
+    handler(): express.RequestHandler;
+    response(result: IResult, req: IRequest, res: express.Response, next: express.NextFunction): void;
+}

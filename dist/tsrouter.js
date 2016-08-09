@@ -143,3 +143,24 @@ function buildRouter(src) {
     };
 }
 exports.buildRouter = buildRouter;
+var ExpressRouter = (function () {
+    function ExpressRouter() {
+    }
+    ExpressRouter.prototype.handler = function () {
+        var _this = this;
+        return function (req, res, next) {
+            Promise.resolve(_this.process(req))
+                .then(function (result) {
+                _this.response(result, req, res, next);
+            })
+                .catch(function (err) {
+                next(err);
+            });
+        };
+    };
+    ExpressRouter.prototype.response = function (result, req, res, next) {
+        res.json(result);
+    };
+    return ExpressRouter;
+}());
+exports.ExpressRouter = ExpressRouter;
