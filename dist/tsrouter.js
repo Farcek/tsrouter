@@ -146,10 +146,19 @@ exports.buildRouter = buildRouter;
 var ExpressRouter = (function () {
     function ExpressRouter() {
     }
+    ExpressRouter.prototype.valid = function (req) {
+    };
     ExpressRouter.prototype.handler = function () {
         var _this = this;
         return function (req, res, next) {
-            Promise.resolve(_this.process(req))
+            var validation = Promise.resolve(undefined);
+            if (_this.valid && typeof (_this.valid) === 'function') {
+                validation = Promise.resolve(_this.valid(req));
+            }
+            validation
+                .then(function () {
+                return _this.process(req);
+            })
                 .then(function (result) {
                 _this.response(result, req, res, next);
             })
@@ -164,3 +173,27 @@ var ExpressRouter = (function () {
     return ExpressRouter;
 }());
 exports.ExpressRouter = ExpressRouter;
+function buildExpressRoute(route) {
+    return function (req, res, next) {
+        var validation = Promise.resolve();
+        if (route.check && typeof (route.check) === 'function') {
+            validation = Promise.resolve(route.check(req));
+        }
+        validation
+            .then(function () {
+            return route.action(req);
+        })
+            .then(function (result) {
+            if (route.resp && typeof (route.resp) === 'function') {
+                route.resp(res, result, req);
+            }
+            else {
+                res.json(result);
+            }
+        })
+            .catch(function (err) {
+            next(err);
+        });
+    };
+}
+exports.buildExpressRoute = buildExpressRoute;

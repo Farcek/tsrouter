@@ -5,33 +5,33 @@ import * as express from "express";
  */
 export namespace TSRouter {
 
-    export interface IRoute<IPram,IResult> {
-        parse?:IParser<IPram>;
-        valid?:IValidator<IPram>;
-        process:IProcess<IPram,IResult>;
+    export interface IRoute<IPram, IResult> {
+        parse?: IParser<IPram>;
+        valid?: IValidator<IPram>;
+        process: IProcess<IPram, IResult>;
     }
     export interface IRouteBasicParam<IResult> {
-        process:IProcessBasicParam<IResult>;
+        process: IProcessBasicParam<IResult>;
     }
     export interface IRouteBasicResult<IParam> {
-        parse?:IParser<IParam>;
-        valid?:IValidator<IParam>;
-        process:IProcessBasicResult<IParam>;
+        parse?: IParser<IParam>;
+        valid?: IValidator<IParam>;
+        process: IProcessBasicResult<IParam>;
     }
     export interface IParser<IParam> {
-        (req:express.Request):IParam | Promise<IParam>;
+        (req: express.Request): IParam | Promise<IParam>;
     }
     export interface IValidator<IParam> {
-        (param:IParam):boolean | Promise<boolean>;
+        (param: IParam): boolean | Promise<boolean>;
     }
-    export interface IProcess<IParam,IResult> {
-        (param:IParam):IResult | Promise<IResult>;
+    export interface IProcess<IParam, IResult> {
+        (param: IParam): IResult | Promise<IResult>;
     }
     export interface IProcessBasicParam<IResult> {
-        (req:express.Request):IResult | Promise<IResult>;
+        (req: express.Request): IResult | Promise<IResult>;
     }
     export interface IProcessBasicResult<IParam> {
-        (param:IParam):any;
+        (param: IParam): any;
     }
 }
 
@@ -40,13 +40,13 @@ export namespace TSRouter {
  * @deprecated plase use `IRouter` and `buildRouter`
  */
 export class Router<IPram, IResult> {
-    constructor(private router:TSRouter.IRoute<IPram,IResult>) {
+    constructor(private router: TSRouter.IRoute<IPram, IResult>) {
 
     }
 
-    public handler():express.RequestHandler {
+    public handler(): express.RequestHandler {
 
-        return (req:express.Request, res:express.Response, next:express.NextFunction) => {
+        return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
             var rParams = null;
 
@@ -56,7 +56,7 @@ export class Router<IPram, IResult> {
 
             Promise.resolve(rParams)
                 .then(params => {
-                    let rValid:boolean | Promise<boolean> = true;
+                    let rValid: boolean | Promise<boolean> = true;
                     if (this.router.valid) {
                         rValid = this.router.valid(params);
                     }
@@ -89,7 +89,7 @@ export class Router<IPram, IResult> {
 /**
  * @deprecated
  */
-export class ProcessBasicResult<IParam> extends Router<IParam,{}> {
+export class ProcessBasicResult<IParam> extends Router<IParam, {}> {
 
 }
 
@@ -97,12 +97,12 @@ export class ProcessBasicResult<IParam> extends Router<IParam,{}> {
  * @deprecated
  */
 export class RouteBasicParam<IResult> {
-    constructor(private router:TSRouter.IRouteBasicParam<IResult>) {
+    constructor(private router: TSRouter.IRouteBasicParam<IResult>) {
 
     }
 
-    public handler():express.RequestHandler {
-        return (req:express.Request, res:express.Response, next:express.NextFunction) => {
+    public handler(): express.RequestHandler {
+        return (req: express.Request, res: express.Response, next: express.NextFunction) => {
             var rResult = this.router.process(req);
 
             Promise.resolve(rResult)
@@ -121,18 +121,18 @@ export class RouteBasicParam<IResult> {
  */
 export abstract class TSHandler<IParam, IResult> {
 
-    public req(req:express.Request):IParam | Promise<IParam> {
+    public req(req: express.Request): IParam | Promise<IParam> {
         return null;
     }
 
-    public valid(param:IParam, req:express.Request):boolean | Promise<boolean> {
+    public valid(param: IParam, req: express.Request): boolean | Promise<boolean> {
         return true;
     }
 
-    abstract res(param:IParam, res:express.Response):IResult | Promise<IResult> ;
+    abstract res(param: IParam, res: express.Response): IResult | Promise<IResult>;
 
-    public handler():express.RequestHandler {
-        return (req:express.Request, res:express.Response, next) => {
+    public handler(): express.RequestHandler {
+        return (req: express.Request, res: express.Response, next) => {
             let param = this.req(req);
 
             Promise.resolve(param)
@@ -146,7 +146,7 @@ export abstract class TSHandler<IParam, IResult> {
                             }
                             throw new Error("validation error");
                         })
-                        .then((result)=> {
+                        .then((result) => {
                             res.json(result);
                         })
                         .catch(err => {
@@ -158,17 +158,17 @@ export abstract class TSHandler<IParam, IResult> {
 }
 
 
-export interface IRouter<IParam,IResult> {
-    parse?(req?:express.Request):IParam | Promise<IParam>;
-    valid?(param:IParam, req:express.Request):boolean | Promise<boolean>;
-    response?(res:express.Response, result:IResult, param:IParam):void;
-    process(param?:IParam):IResult | Promise<IResult>;
+export interface IRouter<IParam, IResult> {
+    parse?(req?: express.Request): IParam | Promise<IParam>;
+    valid?(param: IParam, req: express.Request): boolean | Promise<boolean>;
+    response?(res: express.Response, result: IResult, param: IParam): void;
+    process(param?: IParam): IResult | Promise<IResult>;
 }
 
 
-export function buildRouter<IParam,IResult>(src:IRouter<IParam,IResult>):express.RequestHandler {
+export function buildRouter<IParam, IResult>(src: IRouter<IParam, IResult>): express.RequestHandler {
 
-    return (req:express.Request, res:express.Response, next:express.NextFunction) => {
+    return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
         var rParams = null;
 
@@ -179,7 +179,7 @@ export function buildRouter<IParam,IResult>(src:IRouter<IParam,IResult>):express
 
         Promise.resolve(rParams)
             .then(params => {
-                let rValid:boolean | Promise<boolean> = true;
+                let rValid: boolean | Promise<boolean> = true;
                 if (typeof src.valid === 'function') {
                     rValid = src.valid(params, req);
                 }
@@ -191,7 +191,7 @@ export function buildRouter<IParam,IResult>(src:IRouter<IParam,IResult>):express
                         throw new Error("validation error");
                     })
                     .then(result => {
-                        if (src.response && typeof  src.response === 'function') {
+                        if (src.response && typeof src.response === 'function') {
                             src.response(res, result, params);
                         } else {
                             res.json(result);
@@ -207,12 +207,24 @@ export function buildRouter<IParam,IResult>(src:IRouter<IParam,IResult>):express
 
 
 export abstract class ExpressRouter<IRequest extends express.Request, IResult> {
-    abstract process(req:IRequest):IResult | Promise<IResult>;
+    abstract process(req: IRequest): IResult | Promise<IResult>;
+    valid(req: IRequest): void | Promise<void> {
 
-    handler():express.RequestHandler {
-        return (req:IRequest, res:express.Response, next:express.NextFunction) => {
+    }
 
-            Promise.resolve(this.process(req))
+    handler(): express.RequestHandler {
+        return (req: IRequest, res: express.Response, next: express.NextFunction) => {
+
+            var validation = Promise.resolve(undefined);
+            if (this.valid && typeof (this.valid) === 'function') {
+                validation = Promise.resolve(this.valid(req))
+            }
+
+
+            validation
+                .then(() => {
+                    return this.process(req);
+                })
                 .then(result => {
                     this.response(result, req, res, next);
                 })
@@ -222,7 +234,44 @@ export abstract class ExpressRouter<IRequest extends express.Request, IResult> {
         }
     }
 
-    response(result:IResult, req:IRequest, res:express.Response, next:express.NextFunction) {
+    /**
+     * 
+     */
+    response(result: IResult, req: IRequest, res: express.Response, next: express.NextFunction) {
         res.json(result);
+    }
+}
+
+
+export interface IExpressRoute<IRequest extends express.Request, IResult> {
+    check?(req: IRequest): void | Promise<void>;
+    action(req: IRequest): IResult | Promise<IResult>;
+    resp?(res: express.Response, result: IResult, req: IRequest): void;
+
+}
+
+export function buildExpressRoute(route: IExpressRoute<any, any>): express.RequestHandler {
+    return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+
+        var validation = Promise.resolve();
+        if (route.check && typeof (route.check) === 'function') {
+            validation = Promise.resolve(route.check(req))
+        }
+
+
+        validation
+            .then(() => {
+                return route.action(req);
+            })
+            .then(result => {
+                if (route.resp && typeof (route.resp) === 'function') {
+                    route.resp(res, result, req);
+                } else {
+                    res.json(result);
+                }
+            })
+            .catch(err => {
+                next(err);
+            })
     }
 }

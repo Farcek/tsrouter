@@ -56,6 +56,13 @@ export interface IRouter<IParam, IResult> {
 export declare function buildRouter<IParam, IResult>(src: IRouter<IParam, IResult>): express.RequestHandler;
 export declare abstract class ExpressRouter<IRequest extends express.Request, IResult> {
     abstract process(req: IRequest): IResult | Promise<IResult>;
+    valid(req: IRequest): void | Promise<void>;
     handler(): express.RequestHandler;
     response(result: IResult, req: IRequest, res: express.Response, next: express.NextFunction): void;
 }
+export interface IExpressRoute<IRequest extends express.Request, IResult> {
+    check?(req: IRequest): void | Promise<void>;
+    action(req: IRequest): IResult | Promise<IResult>;
+    resp?(res: express.Response, result: IResult, req: IRequest): void;
+}
+export declare function buildExpressRoute(route: IExpressRoute<any, any>): express.RequestHandler;
